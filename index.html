@@ -1375,17 +1375,21 @@ function buildCanvas(file, W, H) {
         ctx.fillRect(0, 0, W, H);
       }
 
+      // Use naturalWidth/Height; if still 0 (some SVGs in some browsers), fall back to W/H
+      const iW = img.naturalWidth  || img.width  || W;
+      const iH = img.naturalHeight || img.height || H;
+
       // fit
       const aW = W - pad*2, aH = H - pad*2;
       let dx, dy, dw, dh;
       const fm = fitMode.value;
       if (fm === 'stretch') { dx=pad; dy=pad; dw=aW; dh=aH; }
       else if (fm === 'fill') {
-        const s = Math.max(aW/img.width, aH/img.height);
-        dw=img.width*s; dh=img.height*s; dx=(W-dw)/2; dy=(H-dh)/2;
+        const s = Math.max(aW/iW, aH/iH);
+        dw=iW*s; dh=iH*s; dx=(W-dw)/2; dy=(H-dh)/2;
       } else {
-        const s = Math.min(aW/img.width, aH/img.height);
-        dw=img.width*s; dh=img.height*s; dx=(W-dw)/2; dy=(H-dh)/2;
+        const s = Math.min(aW/iW, aH/iH);
+        dw=iW*s; dh=iH*s; dx=(W-dw)/2; dy=(H-dh)/2;
       }
 
       // shadow
@@ -1396,7 +1400,7 @@ function buildCanvas(file, W, H) {
         ctx.shadowColor   = shadowColorText.value||'rgba(0,0,0,0.4)';
       }
 
-      ctx.drawImage(img, 0, 0, img.width, img.height, dx, dy, dw, dh);
+      ctx.drawImage(img, 0, 0, iW, iH, dx, dy, dw, dh);
       ctx.shadowOffsetX=0; ctx.shadowOffsetY=0; ctx.shadowBlur=0;
 
       // recolor
@@ -1437,7 +1441,40 @@ function buildCanvas(file, W, H) {
 
     if (file.type==='image/svg+xml' || file.name.endsWith('.svg')) {
       const r = new FileReader();
-      r.onload = e => { img.src = URL.createObjectURL(new Blob([e.target.result],{type:'image/svg+xml'})); };
+      r.onload = e => {
+        // Parse SVG and guarantee explicit width/height so naturalWidth is never 0
+        const parser  = new DOMParser();
+        const doc     = parser.parseFromString(e.target.result, 'image/svg+xml');
+        const svgEl   = doc.querySelector('svg');
+
+        if (!svgEl) { reject(new Error('SVG inválido')); return; }
+
+        // Resolve intrinsic size
+        let svgW = parseFloat(svgEl.getAttribute('width'));
+        let svgH = parseFloat(svgEl.getAttribute('height'));
+
+        // Fallback: read viewBox
+        if ((!svgW || !svgH) && svgEl.getAttribute('viewBox')) {
+          const vb = svgEl.getAttribute('viewBox').trim().split(/[\s,]+/);
+          if (vb.length === 4) { svgW = parseFloat(vb[2]); svgH = parseFloat(vb[3]); }
+        }
+
+        // Last resort: use target canvas size
+        if (!svgW || !svgH || isNaN(svgW) || isNaN(svgH)) { svgW = W; svgH = H; }
+
+        // Force attributes so browser renders at correct size
+        svgEl.setAttribute('width',  svgW);
+        svgEl.setAttribute('height', svgH);
+
+        // If no viewBox, set one so content isn't clipped
+        if (!svgEl.getAttribute('viewBox')) {
+          svgEl.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+        }
+
+        const serialized = new XMLSerializer().serializeToString(doc);
+        const blob = new Blob([serialized], { type: 'image/svg+xml' });
+        img.src = URL.createObjectURL(blob);
+      };
       r.readAsText(file);
     } else {
       img.src = URL.createObjectURL(file);
