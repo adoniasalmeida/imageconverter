@@ -1,909 +1,1171 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
 <title>Logo Batch Converter Pro</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Special+Elite&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <style>
-
-:root{
-    --bg:#020617;
-    --card:#111827;
-    --border:#1e293b;
-    --primary:#3b82f6;
-    --primary-hover:#2563eb;
-    --text:#fff;
-    --muted:#94a3b8;
-    --success:#22c55e;
+:root {
+  --bg:        #1a1208;
+  --bg2:       #221a0a;
+  --card:      #2a1f0e;
+  --border:    #5a3e1b;
+  --amber:     #d4952a;
+  --amber-lt:  #f0b84a;
+  --amber-dim: #8a5e18;
+  --cream:     #f5e6c8;
+  --muted:     #9a7c52;
+  --red:       #c0392b;
+  --green:     #2e7d32;
+  --green-lt:  #4caf50;
+  --shadow:    rgba(0,0,0,0.6);
+  --grain-opacity: 0.06;
 }
 
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg);
+  color: var(--cream);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
 }
 
-body{
-    font-family:'Inter',sans-serif;
-    background:linear-gradient(135deg,#020617,#0f172a);
-    color:var(--text);
-    min-height:100vh;
+/* ── Grain texture overlay ── */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: var(--grain-opacity);
+  pointer-events: none;
+  z-index: 999;
 }
 
-.container{
-    max-width:1450px;
-    margin:auto;
-    padding:30px;
+/* ── Decorative corner rules ── */
+body::after {
+  content:'';
+  position:fixed; inset:0;
+  border: 6px solid var(--amber-dim);
+  pointer-events:none;
+  z-index:998;
+  opacity:0.35;
 }
 
-.header{
-    text-align:center;
-    margin-bottom:35px;
+/* ── Scanlines ── */
+.scanlines {
+  position:fixed; inset:0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events:none;
+  z-index:997;
 }
 
-.logo-title{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:15px;
-    margin-bottom:10px;
+.container {
+  max-width: 1480px;
+  margin: auto;
+  padding: 36px 32px;
 }
 
-.logo-icon{
-    width:64px;
-    height:64px;
-    border-radius:18px;
-    background:linear-gradient(135deg,#3b82f6,#2563eb);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:30px;
-    box-shadow:0 10px 30px rgba(59,130,246,.35);
+/* ══ HEADER ══ */
+.header {
+  text-align:center;
+  margin-bottom:40px;
+  padding-bottom:28px;
+  border-bottom: 2px solid var(--border);
+  position:relative;
 }
 
-.header h1{
-    font-size:3rem;
+.header::before, .header::after {
+  content:'✦ ✦ ✦';
+  position:absolute;
+  bottom:-12px;
+  left:50%;
+  transform:translateX(-50%);
+  background:var(--bg);
+  padding:0 16px;
+  color:var(--amber);
+  letter-spacing:8px;
+  font-size:0.7rem;
 }
 
-.header p{
-    color:var(--muted);
+.badge-top {
+  display:inline-block;
+  border:1px solid var(--amber-dim);
+  color:var(--amber);
+  font-size:0.68rem;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  padding:5px 18px;
+  margin-bottom:18px;
+  font-family:'Special Elite',cursive;
 }
 
-.layout{
-    display:grid;
-    grid-template-columns:400px 1fr;
-    gap:25px;
+.header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 3.6rem;
+  font-weight: 900;
+  color: var(--amber-lt);
+  letter-spacing: -1px;
+  line-height:1;
+  text-shadow: 3px 3px 0 rgba(0,0,0,0.5), 0 0 60px rgba(212,149,42,0.2);
 }
 
-.sidebar,
-.content{
-    background:rgba(17,24,39,.85);
-    border:1px solid var(--border);
-    border-radius:24px;
-    padding:24px;
-    backdrop-filter:blur(10px);
+.header h1 span {
+  color: var(--amber);
+  font-style: italic;
 }
 
-.section{
-    margin-bottom:24px;
+.header p {
+  margin-top:12px;
+  color:var(--muted);
+  font-size:0.82rem;
+  letter-spacing:3px;
+  text-transform:uppercase;
 }
 
-.section-title{
-    margin-bottom:12px;
-    font-weight:600;
-    color:#e2e8f0;
+/* ══ LAYOUT ══ */
+.layout {
+  display:grid;
+  grid-template-columns: 410px 1fr;
+  gap:28px;
+  align-items:start;
 }
 
-.drop-area{
-    border:2px dashed #334155;
-    border-radius:18px;
-    padding:40px 20px;
-    text-align:center;
-    cursor:pointer;
-    transition:.3s;
-    background:#0f172a;
+/* ── Panel shared ── */
+.sidebar, .content {
+  background: var(--card);
+  border: 2px solid var(--border);
+  border-radius:4px;
+  padding:26px;
+  position:relative;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03);
 }
 
-.drop-area:hover{
-    border-color:var(--primary);
+/* corner ornaments */
+.sidebar::before, .content::before,
+.sidebar::after, .content::after {
+  content:'◈';
+  position:absolute;
+  color:var(--amber-dim);
+  font-size:1rem;
+  line-height:1;
+}
+.sidebar::before, .content::before { top:8px; left:12px; }
+.sidebar::after, .content::after   { bottom:8px; right:12px; }
+
+/* ── Section ── */
+.section { margin-bottom:26px; }
+
+.section-title {
+  font-family:'Special Elite',cursive;
+  font-size:0.78rem;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--amber);
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 
-.drop-area.active{
-    border-color:var(--primary);
-    background:rgba(59,130,246,.08);
+.section-title::after {
+  content:'';
+  flex:1;
+  height:1px;
+  background: linear-gradient(90deg, var(--border), transparent);
 }
 
-.drop-area h2{
-    margin-bottom:8px;
+/* ── Drop Area ── */
+.drop-area {
+  border: 2px dashed var(--border);
+  border-radius:4px;
+  padding: 36px 20px;
+  text-align:center;
+  cursor:pointer;
+  transition: all 0.25s;
+  background: var(--bg2);
+  position:relative;
+  overflow:hidden;
 }
 
-.drop-area p{
-    color:var(--muted);
+.drop-area::before {
+  content:'';
+  position:absolute; inset:6px;
+  border:1px solid rgba(90,62,27,0.3);
+  border-radius:2px;
+  pointer-events:none;
 }
 
-input[type=file]{
-    display:none;
+.drop-area:hover, .drop-area.active {
+  border-color: var(--amber);
+  background: rgba(212,149,42,0.05);
+  box-shadow: 0 0 30px rgba(212,149,42,0.1);
 }
 
-textarea,
-input,
-select{
-    width:100%;
-    background:#020617;
-    border:1px solid var(--border);
-    border-radius:12px;
-    padding:12px;
-    color:white;
-    outline:none;
-    font-size:1rem;
+.drop-icon { font-size:2.4rem; margin-bottom:10px; display:block; }
+
+.drop-area h2 {
+  font-family:'Playfair Display',serif;
+  font-size:1.1rem;
+  color:var(--cream);
+  margin-bottom:6px;
 }
 
-textarea{
-    resize:none;
-    height:120px;
+.drop-area p { color:var(--muted); font-size:0.78rem; letter-spacing:1px; }
+
+input[type=file] { display:none; }
+
+/* ── Form controls ── */
+textarea, input[type=number], input[type=text], select {
+  width:100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius:3px;
+  padding:11px 14px;
+  color: var(--cream);
+  font-family:'DM Mono',monospace;
+  font-size:0.88rem;
+  outline:none;
+  transition:border-color 0.2s;
 }
 
-.options{
-    display:grid;
-    gap:14px;
+textarea { resize:none; height:110px; }
+
+textarea:focus, input:focus, select:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 2px rgba(212,149,42,0.12);
 }
 
-.option label{
-    display:block;
-    margin-bottom:8px;
-    color:#cbd5e1;
-    font-size:.92rem;
+select option { background:var(--bg2); }
+
+/* ── Options grid ── */
+.options { display:grid; gap:12px; }
+
+.option label {
+  display:block;
+  color:var(--muted);
+  font-size:0.75rem;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  margin-bottom:7px;
 }
 
-.toggle{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    background:#0f172a;
-    border:1px solid var(--border);
-    padding:14px;
-    border-radius:14px;
+.size-row {
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:10px;
 }
 
-.toggle input{
-    width:22px;
-    height:22px;
+/* ── Toggle row ── */
+.toggle-row {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:var(--bg);
+  border:1px solid var(--border);
+  padding:12px 14px;
+  border-radius:3px;
+  gap:12px;
 }
 
-.buttons{
-    display:grid;
-    gap:12px;
-    margin-top:20px;
+.toggle-label { font-size:0.8rem; color:var(--cream); letter-spacing:1px; }
+
+/* Custom switch */
+.switch { position:relative; display:inline-block; width:42px; height:22px; flex-shrink:0; }
+.switch input { opacity:0; width:0; height:0; }
+
+.slider {
+  position:absolute; inset:0;
+  background:#2a1f0e;
+  border:1px solid var(--border);
+  border-radius:22px;
+  cursor:pointer;
+  transition:0.25s;
 }
 
-button{
-    border:none;
-    border-radius:14px;
-    padding:15px;
-    cursor:pointer;
-    font-size:1rem;
-    font-weight:600;
-    transition:.3s;
+.slider::before {
+  content:'';
+  position:absolute;
+  width:14px; height:14px;
+  left:3px; top:3px;
+  background:var(--muted);
+  border-radius:50%;
+  transition:0.25s;
 }
 
-.primary{
-    background:var(--primary);
-    color:white;
+.switch input:checked + .slider { background:rgba(212,149,42,0.15); border-color:var(--amber); }
+.switch input:checked + .slider::before { transform:translateX(20px); background:var(--amber); }
+
+/* transparent bg state indicator */
+.toggle-hint {
+  font-size:0.68rem;
+  letter-spacing:1px;
+  color:var(--muted);
+  margin-top:4px;
+  padding-left:14px;
+  transition:0.2s;
+}
+.toggle-hint.on { color:var(--amber); }
+
+/* ── Bg colour picker (shown when transparent is OFF) ── */
+.bg-color-row {
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  align-items:end;
+  margin-top:2px;
+  overflow:hidden;
+  max-height:0;
+  opacity:0;
+  transition: max-height 0.3s ease, opacity 0.3s ease, margin-top 0.3s ease;
+}
+.bg-color-row.visible {
+  max-height:80px;
+  opacity:1;
+  margin-top:12px;
+}
+input[type=color] {
+  width:46px; height:40px;
+  padding:2px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:3px;
+  cursor:pointer;
 }
 
-.primary:hover{
-    background:var(--primary-hover);
+/* ── Format select group ── */
+.format-group {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
 }
 
-.secondary{
-    background:#1e293b;
-    color:white;
+/* ── Quality slider ── */
+.quality-wrap { display:flex; gap:12px; align-items:center; }
+input[type=range] {
+  flex:1;
+  -webkit-appearance:none;
+  height:4px;
+  background: linear-gradient(90deg, var(--amber) var(--pct,70%), var(--border) var(--pct,70%));
+  border-radius:4px;
+  outline:none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none;
+  width:16px; height:16px;
+  background:var(--amber-lt);
+  border-radius:50%;
+  cursor:pointer;
+  box-shadow:0 0 6px rgba(212,149,42,0.5);
+}
+.quality-val { font-size:0.85rem; color:var(--amber-lt); width:34px; text-align:right; }
+
+/* ── Buttons ── */
+.buttons { display:grid; gap:10px; margin-top:22px; }
+
+button {
+  border:none;
+  border-radius:3px;
+  padding:14px;
+  cursor:pointer;
+  font-family:'Special Elite',cursive;
+  font-size:1rem;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  transition:all 0.2s;
+  position:relative;
+  overflow:hidden;
 }
 
-.secondary:hover{
-    background:#334155;
+button::after {
+  content:'';
+  position:absolute; inset:0;
+  background:linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%);
+  pointer-events:none;
 }
 
-button:disabled{
-    opacity:.5;
-    cursor:not-allowed;
+.btn-primary {
+  background: linear-gradient(135deg, #b87a1a, #d4952a);
+  color: #1a1208;
+  box-shadow: 0 4px 0 #7a4e0a, 0 6px 20px rgba(212,149,42,0.25);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+}
+.btn-primary:hover:not(:disabled) {
+  transform:translateY(-2px);
+  box-shadow: 0 6px 0 #7a4e0a, 0 10px 30px rgba(212,149,42,0.35);
+}
+.btn-primary:active:not(:disabled) { transform:translateY(2px); box-shadow: 0 2px 0 #7a4e0a; }
+
+.btn-secondary {
+  background:var(--bg2);
+  color:var(--amber);
+  border:1px solid var(--amber-dim);
+  box-shadow: 0 4px 0 rgba(0,0,0,0.4);
+}
+.btn-secondary:hover:not(:disabled) {
+  transform:translateY(-2px);
+  background:rgba(212,149,42,0.08);
+  border-color:var(--amber);
+}
+.btn-secondary:active:not(:disabled) { transform:translateY(2px); box-shadow:none; }
+
+.btn-danger {
+  background:var(--bg2);
+  color:#e57373;
+  border:1px solid #6b2020;
+  box-shadow: 0 4px 0 rgba(0,0,0,0.4);
+  font-size:0.82rem;
+}
+.btn-danger:hover:not(:disabled) {
+  transform:translateY(-2px);
+  background:rgba(192,57,43,0.08);
+  border-color:#c0392b;
 }
 
-.topbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:20px;
-    flex-wrap:wrap;
-    gap:10px;
+button:disabled { opacity:0.35; cursor:not-allowed; }
+
+/* ── Progress bar ── */
+.progress-wrap {
+  margin-top:14px;
+  display:none;
+}
+.progress-wrap.visible { display:block; }
+.progress-bar-bg {
+  height:6px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:4px;
+  overflow:hidden;
+}
+.progress-bar-fill {
+  height:100%;
+  background: linear-gradient(90deg, var(--amber-dim), var(--amber-lt));
+  border-radius:4px;
+  transition:width 0.2s;
+  width:0%;
+}
+.progress-text {
+  font-size:0.7rem;
+  color:var(--muted);
+  margin-top:5px;
+  letter-spacing:1px;
 }
 
-.status{
-    color:#93c5fd;
+/* ── Selected previews ── */
+.preview-list {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(58px,1fr));
+  gap:8px;
+  margin-top:14px;
+}
+.preview-item {
+  aspect-ratio:1/1;
+  border-radius:3px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  background:var(--bg);
+  position:relative;
+}
+.preview-item img { width:100%; height:100%; object-fit:contain; }
+.preview-item .rm-btn {
+  position:absolute; top:2px; right:2px;
+  width:16px; height:16px;
+  background:rgba(192,57,43,0.85);
+  border:none; border-radius:50%;
+  color:#fff; font-size:9px;
+  cursor:pointer; display:flex;
+  align-items:center; justify-content:center;
+  opacity:0; transition:0.15s;
+  padding:0; letter-spacing:0;
+  font-family:monospace;
+}
+.preview-item:hover .rm-btn { opacity:1; }
+
+/* ══ CONTENT PANEL ══ */
+.topbar {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:22px;
+  padding-bottom:16px;
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap;
+  gap:10px;
 }
 
-.gallery{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
-    gap:20px;
+.count-badge {
+  font-family:'Playfair Display',serif;
+  font-size:2rem;
+  color:var(--amber-lt);
+  line-height:1;
+}
+.count-badge span { font-size:0.75rem; color:var(--muted); display:block; letter-spacing:2px; text-transform:uppercase; margin-top:2px; }
+
+.status-tag {
+  font-size:0.72rem;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  padding:6px 14px;
+  border-radius:3px;
+  border:1px solid var(--border);
+  color:var(--muted);
+  transition:0.3s;
+}
+.status-tag.busy { color:var(--amber); border-color:var(--amber-dim); animation:pulse 1.2s infinite; }
+.status-tag.done { color:var(--green-lt); border-color:var(--green); }
+.status-tag.error { color:#e57373; border-color:#6b2020; }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.6} }
+
+/* ── Gallery ── */
+.gallery {
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(175px,1fr));
+  gap:18px;
 }
 
-.card{
-    background:#0f172a;
-    border:1px solid var(--border);
-    border-radius:18px;
-    overflow:hidden;
-    position:relative;
+.empty-state {
+  grid-column:1/-1;
+  text-align:center;
+  padding:80px 20px;
+  color:var(--muted);
+}
+.empty-icon { font-size:3rem; margin-bottom:16px; opacity:0.4; }
+.empty-state p { font-size:0.8rem; letter-spacing:2px; text-transform:uppercase; }
+
+/* ── Gallery Card ── */
+.card {
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:3px;
+  overflow:hidden;
+  position:relative;
+  transition:transform 0.2s, box-shadow 0.2s;
+  animation:slideIn 0.3s ease backwards;
+}
+.card:hover {
+  transform:translateY(-3px);
+  box-shadow:0 8px 24px rgba(0,0,0,0.5), 0 0 0 1px var(--amber-dim);
 }
 
-.preview{
-    width:100%;
-    aspect-ratio:1/1;
-
-    background:
-        linear-gradient(45deg,#1e293b 25%,transparent 25%),
-        linear-gradient(-45deg,#1e293b 25%,transparent 25%),
-        linear-gradient(45deg,transparent 75%,#1e293b 75%),
-        linear-gradient(-45deg,transparent 75%,#1e293b 75%);
-
-    background-size:20px 20px;
-    background-position:0 0,0 10px,10px -10px,-10px 0;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    position:relative;
+@keyframes slideIn {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
 }
 
-.preview img{
-    width:100%;
-    height:100%;
-    object-fit:contain;
+/* checkered preview background */
+.preview {
+  width:100%;
+  aspect-ratio:1/1;
+  background-image:
+    linear-gradient(45deg,#2a2010 25%,transparent 25%),
+    linear-gradient(-45deg,#2a2010 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,#2a2010 75%),
+    linear-gradient(-45deg,transparent 75%,#2a2010 75%);
+  background-size:16px 16px;
+  background-position:0 0,0 8px,8px -8px,-8px 0;
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+}
+.preview img { width:100%; height:100%; object-fit:contain; }
+
+.stamp {
+  position:absolute; top:8px; right:8px;
+  width:28px; height:28px;
+  background:var(--green);
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px;
+  box-shadow:0 3px 10px rgba(46,125,50,0.5);
 }
 
-.info{
-    padding:14px;
+.card-download {
+  position:absolute; bottom:52px; left:0; right:0;
+  display:flex; justify-content:center;
+  opacity:0; transform:translateY(4px);
+  transition:0.2s;
+}
+.card:hover .card-download { opacity:1; transform:translateY(0); }
+.card-download a {
+  background:rgba(212,149,42,0.9);
+  color:#1a1208;
+  font-family:'Special Elite',cursive;
+  font-size:0.68rem;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  text-decoration:none;
+  padding:6px 16px;
+  border-radius:3px;
 }
 
-.filename{
-    font-size:.85rem;
-    word-break:break-word;
+.info {
+  padding:12px 14px;
+  border-top:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
 }
 
-.badge{
-    margin-top:10px;
-    display:inline-block;
-    background:rgba(34,197,94,.15);
-    color:#22c55e;
-    padding:6px 10px;
-    border-radius:999px;
-    font-size:.75rem;
+.filename {
+  font-size:0.72rem;
+  word-break:break-all;
+  color:var(--cream);
+  flex:1;
+  line-height:1.3;
 }
 
-.check-icon{
-    position:absolute;
-    top:10px;
-    right:10px;
-    width:34px;
-    height:34px;
-    border-radius:50%;
-    background:#22c55e;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:18px;
-    font-weight:bold;
-    box-shadow:0 5px 15px rgba(34,197,94,.4);
+.fsize {
+  font-size:0.65rem;
+  color:var(--muted);
+  white-space:nowrap;
+  flex-shrink:0;
 }
 
-.preview-list{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(70px,1fr));
-    gap:10px;
-    margin-top:15px;
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:1050px) {
+  .layout { grid-template-columns:1fr; }
+  .header h1 { font-size:2.4rem; }
+}
+@media(max-width:600px) {
+  .container { padding:20px 16px; }
+  .header h1 { font-size:1.9rem; }
+  .size-row { grid-template-columns:1fr 1fr; }
 }
 
-.preview-item{
-    width:100%;
-    aspect-ratio:1/1;
-    border-radius:12px;
-    overflow:hidden;
-    border:1px solid #334155;
-    background:#0f172a;
+/* ── Error card ── */
+.card.error-card { border-color:#6b2020; }
+.card.error-card .preview { background:#1a0808; }
+.card.error-card .preview::after {
+  content:'⚠';
+  font-size:2rem;
+  color:#e57373;
+  opacity:0.6;
 }
-
-.preview-item img{
-    width:100%;
-    height:100%;
-    object-fit:contain;
-}
-
-@media(max-width:1000px){
-
-    .layout{
-        grid-template-columns:1fr;
-    }
-
-}
-
 </style>
 </head>
+
 <body>
+<div class="scanlines"></div>
 
 <div class="container">
 
-    <div class="header">
+  <!-- ════ HEADER ════ -->
+  <div class="header">
+    <div class="badge-top">Est. 2025 — Professional Edition</div>
+    <h1>Logo Batch <span>Converter</span></h1>
+    <p>Conversão profissional de logos PNG · SVG · WebP · JPEG em lote</p>
+  </div>
 
-        <div class="logo-title">
-            <div class="logo-icon">🖼️</div>
-            <h1>Logo Batch Converter Pro</h1>
+  <div class="layout">
+
+    <!-- ════ SIDEBAR ════ -->
+    <div class="sidebar">
+
+      <!-- Upload -->
+      <div class="section">
+        <div class="section-title">Upload Local</div>
+
+        <label class="drop-area" id="dropArea">
+          <span class="drop-icon">📁</span>
+          <h2>Arraste Imagens</h2>
+          <p>ou clique para selecionar</p>
+          <input type="file" id="fileInput" multiple accept="image/*,.svg">
+        </label>
+
+        <div class="preview-list" id="selectedPreview"></div>
+      </div>
+
+      <!-- Links -->
+      <div class="section">
+        <div class="section-title">Links em Lote</div>
+        <textarea id="linksInput" placeholder="https://site.com/logo1.png&#10;https://site.com/logo2.svg&#10;..."></textarea>
+      </div>
+
+      <!-- Settings -->
+      <div class="section">
+        <div class="section-title">Configurações</div>
+
+        <div class="options">
+
+          <!-- Size + Padding -->
+          <div class="option">
+            <label>Dimensões &amp; Margem</label>
+            <div class="size-row">
+              <div>
+                <label style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;margin-bottom:5px;display:block;">Largura</label>
+                <input type="number" id="widthInput" value="400" min="16" max="4096">
+              </div>
+              <div>
+                <label style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;margin-bottom:5px;display:block;">Altura</label>
+                <input type="number" id="heightInput" value="400" min="16" max="4096">
+              </div>
+              <div>
+                <label style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;margin-bottom:5px;display:block;">Margem</label>
+                <input type="number" id="paddingInput" value="40" min="0" max="500">
+              </div>
+            </div>
+          </div>
+
+          <!-- Transparent toggle -->
+          <div>
+            <div class="toggle-row">
+              <span class="toggle-label">Fundo Transparente</span>
+              <label class="switch">
+                <input type="checkbox" id="transparentBg" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="toggle-hint on" id="transparentHint">PNG com canal alpha ativado</div>
+
+            <!-- Bg colour (visible only when transparent OFF) -->
+            <div class="bg-color-row" id="bgColorRow">
+              <div class="option" style="margin:0">
+                <label>Cor do Fundo</label>
+                <input type="text" id="bgColorText" value="#ffffff" placeholder="#ffffff">
+              </div>
+              <div>
+                <label style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;margin-bottom:7px;display:block;">&nbsp;</label>
+                <input type="color" id="bgColorPicker" value="#ffffff">
+              </div>
+            </div>
+          </div>
+
+          <!-- Logo colour mode -->
+          <div class="option">
+            <label>Cor da Logo</label>
+            <select id="logoMode">
+              <option value="original">Original</option>
+              <option value="white">Branco</option>
+              <option value="dark">Cinza Escuro</option>
+              <option value="custom">Cor Personalizada</option>
+            </select>
+          </div>
+
+          <!-- Custom logo colour (shown when mode=custom) -->
+          <div class="bg-color-row" id="logoColorRow" style="margin-top:0">
+            <div class="option" style="margin:0">
+              <label>Cor Personalizada</label>
+              <input type="text" id="logoColorText" value="#000000">
+            </div>
+            <div>
+              <label style="font-size:0.65rem;color:var(--muted);letter-spacing:1px;margin-bottom:7px;display:block;">&nbsp;</label>
+              <input type="color" id="logoColorPicker" value="#000000">
+            </div>
+          </div>
+
+          <!-- Output format + quality -->
+          <div class="option">
+            <label>Formato de Saída</label>
+            <div class="format-group">
+              <select id="outputFormat">
+                <option value="png">PNG</option>
+                <option value="jpeg">JPEG</option>
+                <option value="webp">WebP</option>
+              </select>
+              <div>
+                <div class="quality-wrap" id="qualityWrap">
+                  <input type="range" id="qualitySlider" min="10" max="100" value="92"
+                    style="--pct:82%">
+                  <span class="quality-val" id="qualityVal">92</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
+      </div>
 
-        <p>
-            Conversão profissional de logos PNG/SVG/WebP em lote
-        </p>
+      <!-- Progress -->
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">0 / 0</div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="buttons">
+        <button class="btn-primary" id="convertBtn">▶ Converter Imagens</button>
+        <button class="btn-secondary" id="downloadBtn" disabled>⬇ Baixar ZIP</button>
+        <button class="btn-danger" id="clearBtn">✕ Limpar Tudo</button>
+      </div>
 
     </div>
 
-    <div class="layout">
+    <!-- ════ CONTENT ════ -->
+    <div class="content">
 
-        <div class="sidebar">
-
-            <div class="section">
-
-                <div class="section-title">
-                    Upload Local
-                </div>
-
-                <label class="drop-area" id="dropArea">
-
-                    <h2>📁 Arraste Imagens</h2>
-
-                    <p>
-                        ou clique para selecionar
-                    </p>
-
-                    <input
-                        type="file"
-                        id="fileInput"
-                        multiple
-                        accept="image/*,.svg"
-                    >
-
-                </label>
-
-                <div class="preview-list" id="selectedPreview"></div>
-
-            </div>
-
-            <div class="section">
-
-                <div class="section-title">
-                    Links em Lote
-                </div>
-
-                <textarea
-                    id="linksInput"
-                    placeholder="https://site.com/logo1.png"
-                ></textarea>
-
-            </div>
-
-            <div class="section">
-
-                <div class="section-title">
-                    Configurações
-                </div>
-
-                <div class="options">
-
-                    <div class="option">
-                        <label>Largura</label>
-                        <input
-                            type="number"
-                            id="widthInput"
-                            value="400"
-                        >
-                    </div>
-
-                    <div class="option">
-                        <label>Altura</label>
-                        <input
-                            type="number"
-                            id="heightInput"
-                            value="400"
-                        >
-                    </div>
-
-                    <div class="option">
-                        <label>Margem Interna</label>
-                        <input
-                            type="number"
-                            id="paddingInput"
-                            value="40"
-                        >
-                    </div>
-
-                    <div class="toggle">
-                        <span>Transparência</span>
-                        <input
-                            type="checkbox"
-                            id="transparentBg"
-                            checked
-                        >
-                    </div>
-
-                    <div class="option">
-
-                        <label>
-                            Cor da Logo
-                        </label>
-
-                        <select id="logoMode">
-
-                            <option value="original">
-                                Original
-                            </option>
-
-                            <option value="white">
-                                Branco
-                            </option>
-
-                            <option value="dark">
-                                Cinza Escuro
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="buttons">
-
-                <button
-                    class="primary"
-                    id="convertBtn"
-                >
-                    Converter Imagens
-                </button>
-
-                <button
-                    class="secondary"
-                    id="downloadBtn"
-                    disabled
-                >
-                    Baixar ZIP
-                </button>
-
-            </div>
-
+      <div class="topbar">
+        <div>
+          <div class="count-badge" id="countLabel">0<span>imagens convertidas</span></div>
         </div>
+        <div class="status-tag" id="status">Aguardando imagens…</div>
+      </div>
 
-        <div class="content">
-
-            <div class="topbar">
-
-                <div id="countLabel">
-                    0 convertidas
-                </div>
-
-                <div class="status" id="status">
-                    Aguardando imagens...
-                </div>
-
-            </div>
-
-            <div class="gallery" id="gallery"></div>
-
+      <div class="gallery" id="gallery">
+        <div class="empty-state">
+          <div class="empty-icon">🖼</div>
+          <p>Nenhuma imagem convertida ainda</p>
         </div>
+      </div>
 
     </div>
 
-</div>
+  </div><!-- /layout -->
+</div><!-- /container -->
 
 <script>
-
-const fileInput = document.getElementById('fileInput');
-const dropArea = document.getElementById('dropArea');
-const gallery = document.getElementById('gallery');
-const convertBtn = document.getElementById('convertBtn');
-const downloadBtn = document.getElementById('downloadBtn');
-const statusEl = document.getElementById('status');
-const countLabel = document.getElementById('countLabel');
-const widthInput = document.getElementById('widthInput');
-const heightInput = document.getElementById('heightInput');
-const paddingInput = document.getElementById('paddingInput');
-const transparentBg = document.getElementById('transparentBg');
-const logoMode = document.getElementById('logoMode');
-const linksInput = document.getElementById('linksInput');
+// ── Elements ──
+const fileInput       = document.getElementById('fileInput');
+const dropArea        = document.getElementById('dropArea');
+const gallery         = document.getElementById('gallery');
+const convertBtn      = document.getElementById('convertBtn');
+const downloadBtn     = document.getElementById('downloadBtn');
+const clearBtn        = document.getElementById('clearBtn');
+const statusEl        = document.getElementById('status');
+const countLabel      = document.getElementById('countLabel');
+const widthInput      = document.getElementById('widthInput');
+const heightInput     = document.getElementById('heightInput');
+const paddingInput    = document.getElementById('paddingInput');
+const transparentBg   = document.getElementById('transparentBg');
+const transparentHint = document.getElementById('transparentHint');
+const bgColorRow      = document.getElementById('bgColorRow');
+const bgColorText     = document.getElementById('bgColorText');
+const bgColorPicker   = document.getElementById('bgColorPicker');
+const logoMode        = document.getElementById('logoMode');
+const logoColorRow    = document.getElementById('logoColorRow');
+const logoColorText   = document.getElementById('logoColorText');
+const logoColorPicker = document.getElementById('logoColorPicker');
+const outputFormat    = document.getElementById('outputFormat');
+const qualitySlider   = document.getElementById('qualitySlider');
+const qualityVal      = document.getElementById('qualityVal');
+const qualityWrap     = document.getElementById('qualityWrap');
+const linksInput      = document.getElementById('linksInput');
 const selectedPreview = document.getElementById('selectedPreview');
+const progressWrap    = document.getElementById('progressWrap');
+const progressFill    = document.getElementById('progressFill');
+const progressText    = document.getElementById('progressText');
 
-let selectedFiles = [];
+let selectedFiles  = [];
 let convertedFiles = [];
 
-function renderSelectedPreview(){
+// ── Transparent toggle ──
+transparentBg.addEventListener('change', () => {
+  const on = transparentBg.checked;
+  transparentHint.textContent = on ? 'PNG com canal alpha ativado' : 'Cor de fundo sólida';
+  transparentHint.classList.toggle('on', on);
+  bgColorRow.classList.toggle('visible', !on);
+});
 
-    selectedPreview.innerHTML = '';
+// ── Bg colour sync ──
+bgColorPicker.addEventListener('input', () => { bgColorText.value = bgColorPicker.value; });
+bgColorText.addEventListener('input', () => {
+  if (/^#[0-9a-fA-F]{6}$/.test(bgColorText.value)) bgColorPicker.value = bgColorText.value;
+});
 
-    selectedFiles.forEach(file=>{
+// ── Logo colour mode ──
+logoMode.addEventListener('change', () => {
+  logoColorRow.classList.toggle('visible', logoMode.value === 'custom');
+});
+logoColorPicker.addEventListener('input', () => { logoColorText.value = logoColorPicker.value; });
+logoColorText.addEventListener('input', () => {
+  if (/^#[0-9a-fA-F]{6}$/.test(logoColorText.value)) logoColorPicker.value = logoColorText.value;
+});
 
-        const div = document.createElement('div');
+// ── Format / quality ──
+outputFormat.addEventListener('change', () => {
+  qualityWrap.style.visibility = outputFormat.value === 'png' ? 'hidden' : 'visible';
+});
 
-        div.className = 'preview-item';
+qualitySlider.addEventListener('input', () => {
+  const v = qualitySlider.value;
+  qualityVal.textContent = v;
+  qualitySlider.style.setProperty('--pct', Math.round((v - 10) / 90 * 100) + '%');
+});
 
-        const img = document.createElement('img');
+// ── File selection ──
+fileInput.addEventListener('change', e => {
+  addFiles([...e.target.files]);
+  fileInput.value = '';
+});
 
-        img.src = URL.createObjectURL(file);
+dropArea.addEventListener('click', e => {
+  if (e.target !== fileInput) fileInput.click();
+});
 
-        div.appendChild(img);
+dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('active'); });
+dropArea.addEventListener('dragleave',  () => dropArea.classList.remove('active'));
+dropArea.addEventListener('drop', e => {
+  e.preventDefault();
+  dropArea.classList.remove('active');
+  addFiles([...e.dataTransfer.files]);
+});
 
-        selectedPreview.appendChild(div);
-
-    });
-
+function addFiles(files) {
+  const imgs = files.filter(f => f.type.startsWith('image/') || f.name.endsWith('.svg'));
+  selectedFiles.push(...imgs);
+  renderSelectedPreview();
+  setStatus(`${selectedFiles.length} imagem(ns) carregada(s)`, '');
 }
 
-fileInput.addEventListener('change',(e)=>{
+function renderSelectedPreview() {
+  selectedPreview.innerHTML = '';
+  selectedFiles.forEach((file, idx) => {
+    const div = document.createElement('div');
+    div.className = 'preview-item';
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    const btn = document.createElement('button');
+    btn.className = 'rm-btn';
+    btn.textContent = '✕';
+    btn.title = 'Remover';
+    btn.onclick = e => { e.preventDefault(); selectedFiles.splice(idx, 1); renderSelectedPreview(); };
+    div.appendChild(img);
+    div.appendChild(btn);
+    selectedPreview.appendChild(div);
+  });
+}
 
-    const files = [...e.target.files];
+// ── Convert ──
+convertBtn.addEventListener('click', async () => {
+  const allLinks = linksInput.value.split('\n').map(l => l.trim()).filter(Boolean);
+  const total = selectedFiles.length + allLinks.length;
 
-    selectedFiles.push(...files);
+  if (total === 0) {
+    setStatus('Nenhuma imagem para converter', 'error');
+    return;
+  }
 
-    renderSelectedPreview();
+  gallery.innerHTML = '';
+  convertedFiles = [];
+  downloadBtn.disabled = true;
+  convertBtn.disabled = true;
+  clearBtn.disabled = true;
 
-    statusEl.innerHTML =
-        `${selectedFiles.length} imagens carregadas`;
+  progressWrap.classList.add('visible');
+  setStatus('Convertendo…', 'busy');
+  updateCount(0);
 
-    fileInput.value = '';
+  const w = Math.max(1, parseInt(widthInput.value) || 400);
+  const h = Math.max(1, parseInt(heightInput.value) || 400);
+  let done = 0;
 
+  const tick = () => {
+    done++;
+    const pct = Math.round(done / total * 100);
+    progressFill.style.width = pct + '%';
+    progressText.textContent = `${done} / ${total}`;
+    updateCount(convertedFiles.length);
+  };
+
+  for (const file of selectedFiles) {
+    await processFile(file, w, h);
+    tick();
+  }
+
+  for (const link of allLinks) {
+    await processUrl(link, w, h);
+    tick();
+  }
+
+  updateCount(convertedFiles.length);
+  setStatus(convertedFiles.length > 0 ? 'Conversão concluída ✓' : 'Nenhuma convertida', convertedFiles.length > 0 ? 'done' : 'error');
+  if (convertedFiles.length > 0) downloadBtn.disabled = false;
+  convertBtn.disabled = false;
+  clearBtn.disabled = false;
 });
 
+// ── URL fetch ──
+async function processUrl(url, w, h) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const blob = await res.blob();
+    const name = url.split('/').pop().split('?')[0] || 'logo';
+    await processFile(new File([blob], name, { type: blob.type }), w, h);
+  } catch (err) {
+    createErrorCard(url.split('/').pop().split('?')[0] || 'erro');
+    console.error('URL error:', url, err);
+  }
+}
 
-dropArea.addEventListener('dragover',(e)=>{
+// ── Core processing ──
+function processFile(file, canvasW, canvasH) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
 
-    e.preventDefault();
+    img.onload = () => {
+      const pad    = Math.max(0, parseInt(paddingInput.value) || 0);
+      const canvas = document.createElement('canvas');
+      canvas.width  = canvasW;
+      canvas.height = canvasH;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
-    dropArea.classList.add('active');
+      // Background
+      const transparent = transparentBg.checked;
+      if (!transparent) {
+        ctx.fillStyle = bgColorText.value || '#ffffff';
+        ctx.fillRect(0, 0, canvasW, canvasH);
+      }
 
-});
+      // Scale to fit with padding
+      const availW  = canvasW - pad * 2;
+      const availH  = canvasH - pad * 2;
+      const scale   = Math.min(availW / img.width, availH / img.height);
+      const newW    = img.width  * scale;
+      const newH    = img.height * scale;
+      const x       = (canvasW - newW) / 2;
+      const y       = (canvasH - newH) / 2;
+      ctx.drawImage(img, x, y, newW, newH);
 
-dropArea.addEventListener('dragleave',()=>{
+      // Recolour
+      const mode = logoMode.value;
+      if (mode !== 'original') {
+        ctx.globalCompositeOperation = 'source-atop';
+        if      (mode === 'white')  ctx.fillStyle = '#ffffff';
+        else if (mode === 'dark')   ctx.fillStyle = '#2b2b2b';
+        else if (mode === 'custom') ctx.fillStyle = logoColorText.value || '#000000';
+        ctx.fillRect(0, 0, canvasW, canvasH);
+        ctx.globalCompositeOperation = 'source-over';
+      }
 
-    dropArea.classList.remove('active');
+      // Output
+      const fmt = outputFormat.value;
+      const mimeType = fmt === 'jpeg' ? 'image/jpeg' : fmt === 'webp' ? 'image/webp' : 'image/png';
+      const quality  = fmt === 'png' ? undefined : parseInt(qualitySlider.value) / 100;
+      const ext      = fmt === 'jpeg' ? 'jpg' : fmt;
+      const fileName = file.name.replace(/\.[^/.]+$/, '') + '.' + ext;
 
-});
+      canvas.toBlob(blob => {
+        convertedFiles.push({ name: fileName, blob, mimeType });
+        createPreviewCard(blob, fileName, blob.size);
+        resolve();
+      }, mimeType, quality);
+    };
 
-dropArea.addEventListener('drop',(e)=>{
+    img.onerror = () => {
+      createErrorCard(file.name);
+      resolve();
+    };
 
-    e.preventDefault();
-
-    dropArea.classList.remove('active');
-
-    const files = [...e.dataTransfer.files];
-
-    selectedFiles.push(...files);
-
-    renderSelectedPreview();
-
-    statusEl.innerHTML =
-        `${selectedFiles.length} imagens carregadas`;
-
-});
-
-convertBtn.addEventListener('click',async()=>{
-
-    gallery.innerHTML = '';
-
-    convertedFiles = [];
-
-    const width = parseInt(widthInput.value);
-    const height = parseInt(heightInput.value);
-
-    statusEl.innerHTML =
-        'Convertendo imagens...';
-
-    for(const file of selectedFiles){
-
-        await processFile(file,width,height);
-
+    // Load SVG or raster
+    if (file.type === 'image/svg+xml' || file.name.endsWith('.svg')) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const blob = new Blob([e.target.result], { type: 'image/svg+xml' });
+        img.src = URL.createObjectURL(blob);
+      };
+      reader.readAsText(file);
+    } else {
+      img.src = URL.createObjectURL(file);
     }
+  });
+}
 
-    const links = linksInput.value
-        .split('\n')
-        .map(l=>l.trim())
-        .filter(Boolean);
+// ── Gallery cards ──
+function createPreviewCard(blob, fileName, size) {
+  const url  = URL.createObjectURL(blob);
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.style.animationDelay = (convertedFiles.length * 40) + 'ms';
+  card.innerHTML = `
+    <div class="preview">
+      <img src="${url}" loading="lazy">
+      <div class="stamp">✓</div>
+    </div>
+    <div class="card-download">
+      <a href="${url}" download="${fileName}">⬇ Baixar</a>
+    </div>
+    <div class="info">
+      <div class="filename">${fileName}</div>
+      <div class="fsize">${formatSize(size)}</div>
+    </div>
+  `;
+  gallery.appendChild(card);
+}
 
-    for(const link of links){
+function createErrorCard(name) {
+  const card = document.createElement('div');
+  card.className = 'card error-card';
+  card.innerHTML = `
+    <div class="preview"></div>
+    <div class="info">
+      <div class="filename" style="color:#e57373">${name}</div>
+      <div class="fsize" style="color:#e57373">erro</div>
+    </div>
+  `;
+  gallery.appendChild(card);
+}
 
-        await processUrl(link,width,height);
+// ── Download ZIP ──
+downloadBtn.addEventListener('click', async () => {
+  if (convertedFiles.length === 0) return;
+  setStatus('Criando ZIP…', 'busy');
+  downloadBtn.disabled = true;
 
-    }
+  const zip = new JSZip();
+  convertedFiles.forEach(f => zip.file(f.name, f.blob));
 
-    countLabel.innerHTML =
-        `${convertedFiles.length} convertidas`;
+  const content = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(content);
+  link.download = 'logos_convertidos.zip';
+  link.click();
 
-    statusEl.innerHTML =
-        'Conversão concluída';
-
-    if(convertedFiles.length > 0){
-
-        downloadBtn.disabled = false;
-
-    }
-
+  setStatus('Download iniciado ✓', 'done');
+  downloadBtn.disabled = false;
 });
 
-async function processUrl(url,width,height){
-
-    try{
-
-        const response = await fetch(url);
-
-        const blob = await response.blob();
-
-        const file = new File(
-            [blob],
-            getFileName(url)
-        );
-
-        await processFile(file,width,height);
-
-    }catch(err){
-
-        console.error(url);
-
-    }
-
-}
-
-function getFileName(url){
-
-    return url
-        .split('/')
-        .pop()
-        .split('?')[0] || 'logo';
-
-}
-
-async function processFile(file,width,height){
-
-    return new Promise((resolve)=>{
-
-        const img = new Image();
-
-        img.crossOrigin = 'anonymous';
-
-        img.onload = ()=>{
-
-            const padding =
-                parseInt(paddingInput.value);
-
-            const canvas =
-                document.createElement('canvas');
-
-            canvas.width = width;
-            canvas.height = height;
-
-            const ctx =
-                canvas.getContext('2d');
-
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-
-            const availableWidth =
-                width - (padding * 2);
-
-            const availableHeight =
-                height - (padding * 2);
-
-            // aproxima logos pequenas até limite da margem
-
-            const scale = Math.min(
-                availableWidth / img.width,
-                availableHeight / img.height
-            );
-
-            const newWidth =
-                img.width * scale;
-
-            const newHeight =
-                img.height * scale;
-
-            const x =
-                (width - newWidth) / 2;
-
-            const y =
-                (height - newHeight) / 2;
-
-            ctx.drawImage(
-                img,
-                x,
-                y,
-                newWidth,
-                newHeight
-            );
-
-            // recolorir logo
-
-            if(logoMode.value !== 'original'){
-
-                ctx.globalCompositeOperation =
-                    'source-atop';
-
-                if(logoMode.value === 'white'){
-
-                    ctx.fillStyle = '#ffffff';
-
-                }
-
-                if(logoMode.value === 'dark'){
-
-                    ctx.fillStyle = '#2b2b2b';
-
-                }
-
-                ctx.fillRect(
-                    0,
-                    0,
-                    width,
-                    height
-                );
-
-                ctx.globalCompositeOperation =
-                    'source-over';
-
-            }
-
-            canvas.toBlob((blob)=>{
-
-                const fileName =
-                    file.name.replace(
-                        /\.[^/.]+$/,
-                        ''
-                    ) + '.png';
-
-                convertedFiles.push({
-
-                    name:fileName,
-                    blob:blob
-
-                });
-
-                createPreview(
-                    blob,
-                    fileName
-                );
-
-                resolve();
-
-            },'image/png');
-
-        };
-
-        if(file.type === 'image/svg+xml'){
-
-            const reader = new FileReader();
-
-            reader.onload = function(e){
-
-                const svgBlob = new Blob(
-                    [e.target.result],
-                    {
-                        type:'image/svg+xml'
-                    }
-                );
-
-                const url =
-                    URL.createObjectURL(svgBlob);
-
-                img.src = url;
-
-            };
-
-            reader.readAsText(file);
-
-        }else{
-
-            img.src =
-                URL.createObjectURL(file);
-
-        }
-
-    });
-
-}
-
-function createPreview(blob,fileName){
-
-    const url =
-        URL.createObjectURL(blob);
-
-    const card =
-        document.createElement('div');
-
-    card.className = 'card';
-
-    card.innerHTML = `
-
-        <div class="preview">
-
-            <img src="${url}">
-
-            <div class="check-icon">✓</div>
-
-        </div>
-
-        <div class="info">
-
-            <div class="filename">
-
-                ${fileName}
-
-            </div>
-
-            <div class="badge">
-
-                Convertido
-
-            </div>
-
-        </div>
-
-    `;
-
-    gallery.appendChild(card);
-
-}
-
-downloadBtn.addEventListener('click',async()=>{
-
-    const zip = new JSZip();
-
-    convertedFiles.forEach(file=>{
-
-        zip.file(
-            file.name,
-            file.blob
-        );
-
-    });
-
-    statusEl.innerHTML =
-        'Criando ZIP...';
-
-    const content =
-        await zip.generateAsync({
-            type:'blob'
-        });
-
-    const link =
-        document.createElement('a');
-
-    link.href =
-        URL.createObjectURL(content);
-
-    link.download =
-        'logos_convertidos.zip';
-
-    link.click();
-
-    statusEl.innerHTML =
-        'Download iniciado';
-
+// ── Clear ──
+clearBtn.addEventListener('click', () => {
+  selectedFiles = [];
+  convertedFiles = [];
+  renderSelectedPreview();
+  gallery.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">🖼</div>
+      <p>Nenhuma imagem convertida ainda</p>
+    </div>
+  `;
+  downloadBtn.disabled = true;
+  progressWrap.classList.remove('visible');
+  progressFill.style.width = '0%';
+  updateCount(0);
+  setStatus('Aguardando imagens…', '');
+  linksInput.value = '';
 });
 
+// ── Helpers ──
+function setStatus(msg, type) {
+  statusEl.textContent = msg;
+  statusEl.className = 'status-tag' + (type ? ' ' + type : '');
+}
+
+function updateCount(n) {
+  countLabel.innerHTML = `${n}<span>imagem(ns) convertida(s)</span>`;
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
 </script>
-
 </body>
 </html>
-
